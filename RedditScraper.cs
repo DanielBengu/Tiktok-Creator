@@ -22,14 +22,14 @@ namespace Reddit_scraper
             _client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
         }
 
-        public async Task ScrapeRedditPost(string url)
+        public async Task<RedditPost?> ScrapeRedditPost(string url)
         {
             HttpResponseMessage response = await _client.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Failed to retrieve data from Reddit. Status code: {response.StatusCode}");
-                return;
+                return null;
             }
 
             string html = await response.Content.ReadAsStringAsync();
@@ -44,6 +44,8 @@ namespace Reddit_scraper
             {
                 Console.WriteLine("No <shreddit-post> element found in the HTML.");
             }
+
+            return redditPost;
         }
 
         private async static Task<RedditPost?> ExtractRedditPost(string html, string url)
@@ -90,11 +92,6 @@ namespace Reddit_scraper
                 // If it's an image post, get the image link
                 string? imageUrl = postType == "image" || postType == "multi_media" ? postNode?.Attributes["content-href"]?.Value : "";
 
-                EdenAIImageGenerator edenAIImageGenerator = new();
-                Image? ai_image = await edenAIImageGenerator.GenerateImageAsync(decodedPostTitle);
-                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                string filePath = Path.Combine(documentsPath, $"{postId}.png");
-                ai_image.Save(filePath, ImageFormat.Png);
                 return new RedditPost
                 {
                     Id = postId,
@@ -140,7 +137,7 @@ namespace Reddit_scraper
         private static partial Regex MyRegex();
     }
 
-    internal class RedditPost
+    public class RedditPost
     {
         public string Id { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;

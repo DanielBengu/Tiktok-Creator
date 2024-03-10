@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Reddit_scraper;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Net.Http;
@@ -42,7 +43,7 @@ namespace DeepAIImageGeneration
                     var responseObject = System.Text.Json.JsonSerializer.Deserialize<OpenAI.OpenAiResponse>(responseContent);
 
                     // Return the image URL
-                    return ConvertAndSaveImage(responseObject?.openai?.items?[0].image);
+                    return ConvertImage(responseObject?.openai?.items?[0].image);
                 }
                 else
                 {
@@ -57,7 +58,7 @@ namespace DeepAIImageGeneration
             }
         }
 
-        public static Image? ConvertAndSaveImage(string base64Image)
+        public static Image? ConvertImage(string base64Image)
         {
             try
             {
@@ -76,6 +77,13 @@ namespace DeepAIImageGeneration
                 Console.WriteLine($"Error converting and saving image: {ex.Message}");
                 return null;
             }
+        }
+
+        public static void SaveImage(Image image, RedditPost post)
+        {
+            string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string filePath = Path.Combine(documentsPath, $"{post.Id}.png");
+            image.Save(filePath, ImageFormat.Png);
         }
     }
 }
