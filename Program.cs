@@ -56,10 +56,10 @@ while (true)
 
     //Create subtitles
     string subtitlePath = Path.Combine(basePostPath, $"sub.srt");
-    await GoogleAPI.GenerateSrt(filePathDesc, subtitlePath);
+    int duration = await GoogleAPI.GenerateSrtAndReturnEndTime(filePathDesc, subtitlePath);
 
     //Video
     string videoPath = Path.Combine(basePostPath, $"video.mp4");
     string baseVideoFile = "C:\\Users\\danie\\Videos\\Downloader\\basic_minecraft.mp4";
-    VideoMixing.ReplaceAudio(baseVideoFile, filePathDesc, subtitlePath, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
+    VideoMixing.ReplaceAudio(baseVideoFile, filePathDesc, subtitlePath, duration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
 }

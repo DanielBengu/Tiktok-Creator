@@ -52,7 +52,7 @@ namespace TextToSpeechApp
             Console.WriteLine($"Audio saved to: {outputFile}");
         }
 
-        public static async Task GenerateSrt(string audioFile, string outputSrtFile)
+        public static async Task<int> GenerateSrtAndReturnEndTime(string audioFile, string outputSrtFile)
         {
             // Initialize the SpeechClient with Google Cloud credentials
             SpeechClientBuilder builder = new SpeechClientBuilder { CredentialsPath = _credentialPath };
@@ -68,7 +68,7 @@ namespace TextToSpeechApp
 
             // Wait for the transcription operation to complete
             operation = await operation.PollUntilCompletedAsync();
-
+            double timeSubsEnd = 0;
             // Process the transcription response and generate subtitles
             List<string> subtitles = new List<string>();
             foreach (var result in operation.Result.Results)
@@ -79,6 +79,7 @@ namespace TextToSpeechApp
                     {
                         string startTime = ToSrtTime(wordInfo.StartTime.ToTimeSpan());
                         string endTime = ToSrtTime(wordInfo.EndTime.ToTimeSpan());
+                        timeSubsEnd = wordInfo.EndTime.ToTimeSpan().TotalSeconds;
                         string subtitleText = wordInfo.Word; // Use word instead of alternative.Transcript
                         subtitles.Add($"{subtitles.Count + 1}\n{startTime} --> {endTime}\n{subtitleText}\n");
                     }
@@ -87,6 +88,7 @@ namespace TextToSpeechApp
 
             // Write subtitles to .srt file
             File.WriteAllLines(outputSrtFile, subtitles);
+            return (int)Math.Ceiling(timeSubsEnd);
         }
 
         // Method to convert Duration to SRT time format
