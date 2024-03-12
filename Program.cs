@@ -72,5 +72,5 @@ while (true)
     //Video
     string videoPath = Path.Combine(basePostPath, $"video.mp4");
     string baseVideoFile = "C:\\Users\\danie\\Videos\\Downloader\\basic_minecraft.mp4";
-    VideoMixing.GenerateVideo(baseVideoFile, filePathAudio, subtitlePath, duration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
+    VideoMixing.GenerateVideo(basePostPath, baseVideoFile, filePathAudio, subtitlePath, duration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
 }
