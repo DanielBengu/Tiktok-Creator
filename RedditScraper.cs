@@ -34,7 +34,7 @@ namespace Reddit_scraper
 
             string html = await response.Content.ReadAsStringAsync();
 
-            RedditPost? redditPost = await ExtractRedditPost(html, url);
+            RedditPost? redditPost = ExtractRedditPost(html, url);
 
             if (redditPost != null)
             {
@@ -48,7 +48,7 @@ namespace Reddit_scraper
             return redditPost;
         }
 
-        private async static Task<RedditPost?> ExtractRedditPost(string html, string url)
+        private static RedditPost? ExtractRedditPost(string html, string url)
         {
             // Use Regex to capture the <shreddit-post> element
             Regex regex = MyRegex();

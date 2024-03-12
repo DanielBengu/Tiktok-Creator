@@ -55,7 +55,7 @@ namespace TextToSpeechApp
         public static async Task<int> GenerateSrtAndReturnEndTime(string audioFile, string outputSrtFile)
         {
             // Initialize the SpeechClient with Google Cloud credentials
-            SpeechClientBuilder builder = new SpeechClientBuilder { CredentialsPath = _credentialPath };
+            SpeechClientBuilder builder = new() { CredentialsPath = _credentialPath };
             SpeechClient speechClient = await builder.BuildAsync();
 
             // Perform speech-to-text transcription asynchronously
@@ -68,13 +68,12 @@ namespace TextToSpeechApp
 
             // Wait for the transcription operation to complete
             operation = await operation.PollUntilCompletedAsync();
+
             double timeSubsEnd = 0;
-            // Process the transcription response and generate subtitles
-            List<string> subtitles = new List<string>();
+            List<string> subtitles = [];
+
             foreach (var result in operation.Result.Results)
-            {
                 foreach (var alternative in result.Alternatives)
-                {
                     foreach (var wordInfo in alternative.Words)
                     {
                         string startTime = ToSrtTime(wordInfo.StartTime.ToTimeSpan());
@@ -83,8 +82,6 @@ namespace TextToSpeechApp
                         string subtitleText = wordInfo.Word; // Use word instead of alternative.Transcript
                         subtitles.Add($"{subtitles.Count + 1}\n{startTime} --> {endTime}\n{subtitleText}\n");
                     }
-                }
-            }
 
             // Write subtitles to .srt file
             File.WriteAllLines(outputSrtFile, subtitles);

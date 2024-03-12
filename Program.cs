@@ -1,5 +1,6 @@
 ﻿using DeepAIImageGeneration;
 using Reddit_scraper;
+using Reddit_scraper.AI.RandomStuff;
 using Reddit_scraper.VideoMixer;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -40,26 +41,36 @@ while (true)
     if (!Directory.Exists(basePostPath))
         Directory.CreateDirectory(basePostPath);
 
-    //AI Image Generator
+    /*
+    //Google Gemini AI (Chat)
+    try
+    {
+        string response = await GeminiQuickstart.GenerateContent("prompt");
+        Console.WriteLine(response);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error: {ex.Message}");
+    }
+    */
+    //AI Image Generator 
     /*
     EdenAIImageGenerator edenAIImageGenerator = new();
     Image? ai_image = await edenAIImageGenerator.GenerateImageAsync(post.Title);
     EdenAIImageGenerator.SaveImage(ai_image, post);
     */
-
+    
     //Profound Woman: it-IT, en-US-Wavenet-C, Female
     //Text-to-speech
-    string filePathTitle = Path.Combine(basePostPath, $"title.mp3");
-    string filePathDesc = Path.Combine(basePostPath, $"description.mp3");
-    await GoogleAPI.GenerateSpeech(post.Title, filePathTitle, "it-IT", "en-US-Wavenet-C", Google.Cloud.TextToSpeech.V1.SsmlVoiceGender.Female);
-    await GoogleAPI.GenerateSpeech(post.Content, filePathDesc, "it-IT", "en-US-Wavenet-C", Google.Cloud.TextToSpeech.V1.SsmlVoiceGender.Female);
+    string filePathAudio = Path.Combine(basePostPath, $"audio.mp3");
+    await GoogleAPI.GenerateSpeech($"{post.Title}. {post.Content}", filePathAudio, "it-IT", "en-US-Wavenet-C", Google.Cloud.TextToSpeech.V1.SsmlVoiceGender.Female);
 
     //Create subtitles
     string subtitlePath = Path.Combine(basePostPath, $"sub.srt");
-    int duration = await GoogleAPI.GenerateSrtAndReturnEndTime(filePathDesc, subtitlePath);
+    int duration = await GoogleAPI.GenerateSrtAndReturnEndTime(filePathAudio, subtitlePath);
 
     //Video
     string videoPath = Path.Combine(basePostPath, $"video.mp4");
     string baseVideoFile = "C:\\Users\\danie\\Videos\\Downloader\\basic_minecraft.mp4";
-    VideoMixing.ReplaceAudio(baseVideoFile, filePathDesc, subtitlePath, duration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
+    VideoMixing.GenerateVideo(baseVideoFile, filePathAudio, subtitlePath, duration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
 }

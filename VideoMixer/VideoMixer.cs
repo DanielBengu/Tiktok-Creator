@@ -4,7 +4,7 @@ namespace Reddit_scraper.VideoMixer
 {
     public class VideoMixing
     {
-        public static void ReplaceAudio(string videoFile, string newAudioFile, string subtitleFile, int videoDuration, string outputVideoFile, string ffmpegPath = "ffmpeg")
+        public static void GenerateVideo(string videoFile, string newAudioFile, string subtitleFile, int videoDuration, string outputVideoFile, string ffmpegPath = "ffmpeg")
         {
             // Build the FFmpeg command to replace video audio and add subtitles
             string escapedSubtitleFile = subtitleFile.Replace(@"\", @"\\").Replace(@":", @"\:");
