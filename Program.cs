@@ -1,7 +1,7 @@
 ﻿using DeepAIImageGeneration;
 using Reddit_scraper;
 using Reddit_scraper.AI.RandomStuff;
-using Reddit_scraper.Image;
+using Reddit_scraper.ImageService;
 using Reddit_scraper.VideoMixer;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -38,10 +38,10 @@ while (true)
         continue;
 
     string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    string basePostPath = $"{documentsPath}\\RedditScraper\\{post.Id}";
-
-    if (!Directory.Exists(basePostPath))
-        Directory.CreateDirectory(basePostPath);
+    string basePostPathOutput = $"{documentsPath}\\RedditScraper\\{post.Id}\\";
+    string basePostPathContent = $"{basePostPathOutput}\\Content\\";
+    if (!Directory.Exists(basePostPathContent))
+        Directory.CreateDirectory(basePostPathContent);
 
     /*
     //Google Gemini AI (Chat)
@@ -64,13 +64,13 @@ while (true)
     
     //Profound Woman: it-IT, en-US-Wavenet-C, Female
     //Text-to-speech
-    string filePathAudio = Path.Combine(basePostPath, $"audio.mp3");
+    string filePathAudio = Path.Combine(basePostPathContent, $"audio.mp3");
     await GoogleAPI.GenerateSpeech($"{post.Title}. {post.Content}", filePathAudio, "it-IT", "en-US-Wavenet-C", Google.Cloud.TextToSpeech.V1.SsmlVoiceGender.Female);
 
     try
     {
         //Create subtitles
-        subtitlePath = Path.Combine(basePostPath, $"sub.srt");
+        subtitlePath = Path.Combine(basePostPathContent, $"sub.srt");
         subtitleDuration = await GoogleAPI.GenerateSrtAndReturnEndTime(filePathAudio, subtitlePath);
     }
     catch (Exception ex)
@@ -80,10 +80,10 @@ while (true)
     }
 
     //Create screenshot TODO
-    string imagePath = ScreenshotService.GenerateScreenshot();
+    string imagePath = ScreenshotService.GenerateScreenshot(basePostPathContent, post.Title);
 
     //Video
-    string videoPath = Path.Combine(basePostPath, $"video.mp4");
+    string videoPath = Path.Combine(basePostPathOutput, $"video.mp4");
     string baseVideoFile = "C:\\Users\\danie\\Videos\\Downloader\\basic_minecraft.mp4";
-    VideoMixing.GenerateVideo(basePostPath, baseVideoFile, filePathAudio, imagePath, subtitlePath, subtitleDuration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
+    VideoMixing.GenerateVideo(baseVideoFile, filePathAudio, imagePath, subtitlePath, subtitleDuration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
 }

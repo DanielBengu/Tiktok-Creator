@@ -4,10 +4,10 @@ namespace Reddit_scraper.VideoMixer
 {
     public class VideoMixing
     {
-        public static void GenerateVideo(string basePostPath, string videoFile, string newAudioFile, string imagePath, string subtitleFile, int videoDuration, string outputVideoFile, string ffmpegPath = "ffmpeg")
+        public static void GenerateVideo(string videoFile, string newAudioFile, string imagePath, string subtitleFile, int videoDuration, string outputVideoFile, string ffmpegPath = "ffmpeg")
         {
 
-            string command = BuildCommand(basePostPath, videoFile, newAudioFile, imagePath, subtitleFile, videoDuration, outputVideoFile);
+            string command = BuildCommand(videoFile, newAudioFile, imagePath, subtitleFile, videoDuration, outputVideoFile);
 
             // Run FFmpeg command
             ProcessStartInfo processStartInfo = new()
@@ -31,7 +31,7 @@ namespace Reddit_scraper.VideoMixer
             process.WaitForExit();
         }
 
-        static string BuildCommand(string basePostPath, string videoFile, string newAudioFile, string imagePath, string subtitleFile, int videoDuration, string outputVideoFile)
+        static string BuildCommand(string videoFile, string newAudioFile, string imagePath, string subtitleFile, int videoDuration, string outputVideoFile)
         {
             // Build the FFmpeg command to replace video audio and add subtitles
             string escapedSubtitleFile = subtitleFile.Replace(@"\", @"\\").Replace(@":", @"\:");

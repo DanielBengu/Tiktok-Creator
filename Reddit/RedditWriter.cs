@@ -11,7 +11,7 @@ namespace Reddit_scraper.Reddit
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string filePath = Path.Combine(documentsPath, "reddit_posts.json");
 
-            RedditPostData existingData = new();
+            RedditPostData? existingData = new();
 
             if (File.Exists(filePath))
             {
@@ -20,7 +20,7 @@ namespace Reddit_scraper.Reddit
             }
 
             // Check if the post ID already exists in the existing data
-            if (existingData.Posts.Exists(p => p.Id == post.Id))
+            if (existingData != null && existingData.Posts.Exists(p => p.Id == post.Id))
             {
                 Console.WriteLine($"Post with ID '{post.Id}' already exists. Skipping appending.");
                 return;
