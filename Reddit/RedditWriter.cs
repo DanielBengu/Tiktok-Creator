@@ -2,7 +2,7 @@
 using System.IO;
 using Newtonsoft.Json;
 
-namespace Reddit_scraper
+namespace Reddit_scraper.Reddit
 {
     internal class RedditPostWriter
     {

@@ -1,5 +1,6 @@
 ﻿using DeepAIImageGeneration;
 using HtmlAgilityPack;
+using Reddit_scraper.Reddit;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;

@@ -1,6 +1,7 @@
 ﻿using DeepAIImageGeneration;
 using Reddit_scraper;
 using Reddit_scraper.AI.RandomStuff;
+using Reddit_scraper.Image;
 using Reddit_scraper.VideoMixer;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -13,7 +14,8 @@ RedditScraper redditScraper = new(client, new());
 
 while (true)
 {
-    
+    string subtitlePath = string.Empty;
+    int subtitleDuration = 0;
     Console.WriteLine("Enter Reddit post URL to scrape (or type 'exit' to quit):");
     string? url = Console.ReadLine();
 
@@ -65,12 +67,23 @@ while (true)
     string filePathAudio = Path.Combine(basePostPath, $"audio.mp3");
     await GoogleAPI.GenerateSpeech($"{post.Title}. {post.Content}", filePathAudio, "it-IT", "en-US-Wavenet-C", Google.Cloud.TextToSpeech.V1.SsmlVoiceGender.Female);
 
-    //Create subtitles
-    string subtitlePath = Path.Combine(basePostPath, $"sub.srt");
-    int duration = await GoogleAPI.GenerateSrtAndReturnEndTime(filePathAudio, subtitlePath);
+    try
+    {
+        //Create subtitles
+        subtitlePath = Path.Combine(basePostPath, $"sub.srt");
+        subtitleDuration = await GoogleAPI.GenerateSrtAndReturnEndTime(filePathAudio, subtitlePath);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during subtitle generation: {ex.Message}");
+        continue;
+    }
+
+    //Create screenshot TODO
+    string imagePath = ScreenshotService.GenerateScreenshot();
 
     //Video
     string videoPath = Path.Combine(basePostPath, $"video.mp4");
     string baseVideoFile = "C:\\Users\\danie\\Videos\\Downloader\\basic_minecraft.mp4";
-    VideoMixing.GenerateVideo(basePostPath, baseVideoFile, filePathAudio, subtitlePath, duration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
+    VideoMixing.GenerateVideo(basePostPath, baseVideoFile, filePathAudio, imagePath, subtitlePath, subtitleDuration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
 }

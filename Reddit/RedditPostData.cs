@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Reddit_scraper
+namespace Reddit_scraper.Reddit
 {
     internal class RedditPostData
     {
