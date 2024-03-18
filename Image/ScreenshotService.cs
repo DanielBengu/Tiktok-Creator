@@ -10,7 +10,7 @@ namespace Reddit_scraper.ImageService
         public static string GenerateScreenshot(string path, string title)
         {
             // Generate the image
-            Bitmap image = GenerateImage(title, reddit_logo_path);
+            Bitmap image = GenerateImage(title);
 
             string imagePath = Path.Combine(path, "generated_image.png");
 
@@ -24,81 +24,95 @@ namespace Reddit_scraper.ImageService
             return imagePath;
         }
 
-        static Bitmap GenerateImage(string title, string logoPath)
+        static Bitmap GenerateImage(string title)
         {
             // Load the logo image
-            if (string.IsNullOrEmpty(logoPath) || !File.Exists(logoPath))
-                throw new FileNotFoundException("Logo file not found", logoPath);
+            if (string.IsNullOrEmpty(reddit_logo_path) || !File.Exists(reddit_logo_path))
+                throw new FileNotFoundException("Logo file not found", reddit_logo_path);
 
             // Image dimensions
-            int width = 600;
-            int height = 200;
+            int imgWidth = 600;
+            int imgHeight = 200;
 
             // Create a bitmap with transparent background
-            Bitmap bitmap = new(width, height, PixelFormat.Format32bppArgb);
+            Bitmap bitmap = new(imgWidth, imgHeight, PixelFormat.Format32bppArgb);
             using (Graphics graphics = Graphics.FromImage(bitmap))
             {
                 // Make the background transparent
                 graphics.Clear(Color.Transparent);
 
-                // Draw a rounded rectangle as background panel
-                int cornerRadius = 20;
-                using (GraphicsPath path = RoundedRectangle(new Rectangle(10, 10, width - 20, height - 20), cornerRadius))
-                {
-                    // Fill the rounded rectangle with white color
-                    using Brush brush = new SolidBrush(Color.White);
-                    graphics.FillPath(brush, path);
-                }
-
-                // Load and resize the logo image
-                Image logoImage = Image.FromFile(logoPath);
-                int logoMaxWidth = width / 3; // Adjust as needed
-                int logoMaxHeight = height - 40; // Adjust as needed
-                Size logoSize = GetResizedImageSize(logoImage, logoMaxWidth, logoMaxHeight);
-
-                // Load and resize the logo image with transparency preservation
-                Bitmap resizedLogo = ResizeImageWithTransparency(logoImage, logoSize.Width, logoSize.Height);
-
-                // Draw the logo on the left side of the rectangle
-                graphics.DrawImage(resizedLogo, new Rectangle(20, (height - resizedLogo.Height) / 2, resizedLogo.Width, resizedLogo.Height));
-
-                // Dispose the resized logo image
-                resizedLogo.Dispose();
-
-                // Draw title
-                Font titleFont = new("Arial", 24, FontStyle.Bold);
-
-                // Calculate the available width for the title
-                float availableWidthForTitle = width - 60 - logoSize.Width; // Adjusted padding
-
-                // Split title into lines
-                string[] lines = SplitTextIntoLines(title, titleFont, availableWidthForTitle, graphics);
-
-                // Check if the text fits within 3 lines, otherwise reduce font size and try again
-                int maxLines = 5;
-                while (lines.Length > maxLines && titleFont.Size > 5)
-                {
-                    // Reduce font size
-                    titleFont = new Font(titleFont.FontFamily, titleFont.Size - 1, titleFont.Style);
-                    // Try splitting again
-                    lines = SplitTextIntoLines(title, titleFont, availableWidthForTitle, graphics);
-                }
-
-                // Draw the title
-                float titleY = (height - titleFont.GetHeight(graphics) * lines.Length) / 2;
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    graphics.DrawString(lines[i], titleFont, Brushes.Black, new PointF(20 + logoSize.Width + 30, titleY + i * titleFont.GetHeight(graphics)));
-                }
+                DrawBackgroundPanel(graphics, imgWidth, imgHeight);
+                DrawLogo(graphics, imgWidth, imgHeight, out int logoWidth);
+                DrawTitle(graphics, title, imgWidth, imgHeight, logoWidth);
             }
 
             return bitmap;
         }
 
+        static void DrawBackgroundPanel(Graphics graphics, int width, int height)
+        {
+            // Draw a rounded rectangle as background panel
+            int cornerRadius = 20;
+            using (GraphicsPath path = RoundedRectangle(new Rectangle(10, 10, width - 20, height - 20), cornerRadius))
+            {
+                // Fill the rounded rectangle with white color
+                using Brush brush = new SolidBrush(Color.White);
+                graphics.FillPath(brush, path);
+            }
+        }
+        static void DrawTitle(Graphics graphics, string title, int imgWidth, int imgHeight, int logoWidth)
+        {
+            // Draw title
+            Font titleFont = new("Arial", 24, FontStyle.Bold);
+
+            // Calculate the available width for the title
+            float availableWidthForTitle = imgWidth - 60 - logoWidth; // Adjusted padding
+
+            // Split title into lines
+            string[] lines = SplitTextIntoLines(title, titleFont, availableWidthForTitle, graphics);
+
+            // Check if the text fits within 3 lines, otherwise reduce font size and try again
+            int maxLines = 5;
+            while (lines.Length > maxLines && titleFont.Size > 5)
+            {
+                // Reduce font size
+                titleFont = new Font(titleFont.FontFamily, titleFont.Size - 1, titleFont.Style);
+                // Try splitting again
+                lines = SplitTextIntoLines(title, titleFont, availableWidthForTitle, graphics);
+            }
+
+            // Draw the title
+            float titleY = (imgHeight - titleFont.GetHeight(graphics) * lines.Length) / 2;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                graphics.DrawString(lines[i], titleFont, Brushes.Black, new PointF(20 + logoWidth + 30, titleY + i * titleFont.GetHeight(graphics)));
+            }
+        }
+
+        static void DrawLogo(Graphics graphics, int imgWidth, int imgHeight, out int logoWidth)
+        {
+            // Load and resize the logo image
+            Image logoImage = Image.FromFile(reddit_logo_path);
+            int logoMaxWidth = imgWidth / 3; // Adjust as needed
+            int logoMaxHeight = imgHeight - 40; // Adjust as needed
+            Size logoSize = GetResizedImageSize(logoImage, logoMaxWidth, logoMaxHeight);
+
+            // Load and resize the logo image with transparency preservation
+            Bitmap resizedLogo = ResizeImageWithTransparency(logoImage, logoSize.Width, logoSize.Height);
+
+            // Draw the logo on the left side of the rectangle
+            graphics.DrawImage(resizedLogo, new Rectangle(20, (imgHeight - resizedLogo.Height) / 2, resizedLogo.Width, resizedLogo.Height));
+
+            // Dispose the resized logo image
+            resizedLogo.Dispose();
+
+            logoWidth = logoSize.Width;
+        }
+
         static string[] SplitTextIntoLines(string text, Font font, float maxWidth, Graphics graphics)
         {
             string[] words = text.Split(' ');
-            List<string> lines = new List<string>();
+            List<string> lines = [];
             string currentLine = "";
 
             foreach (string word in words)
@@ -114,7 +128,7 @@ namespace Reddit_scraper.ImageService
             if (!string.IsNullOrEmpty(currentLine))
                 lines.Add(currentLine);
 
-            return lines.ToArray();
+            return [.. lines];
         }
 
         // Method to resize the image while maintaining aspect ratio
