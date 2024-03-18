@@ -66,22 +66,55 @@ namespace Reddit_scraper.ImageService
                 resizedLogo.Dispose();
 
                 // Draw title
-                using Font titleFont = new("Arial", 20, FontStyle.Bold);
-                // Measure the size of the title
-                SizeF titleSize = graphics.MeasureString(title, titleFont);
+                Font titleFont = new("Arial", 24, FontStyle.Bold);
 
-                // Calculate the total width taken by the logo and the padding
-                float totalWidthLogoAndPadding = 50 + logoSize.Width + 10;
+                // Calculate the available width for the title
+                float availableWidthForTitle = width - 60 - logoSize.Width; // Adjusted padding
 
-                // Calculate the position to center the title vertically and place it to the right of the logo
-                float titleX = totalWidthLogoAndPadding; // Adjusted position
-                float titleY = (height - titleSize.Height) / 2;
+                // Split title into lines
+                string[] lines = SplitTextIntoLines(title, titleFont, availableWidthForTitle, graphics);
+
+                // Check if the text fits within 3 lines, otherwise reduce font size and try again
+                int maxLines = 5;
+                while (lines.Length > maxLines && titleFont.Size > 5)
+                {
+                    // Reduce font size
+                    titleFont = new Font(titleFont.FontFamily, titleFont.Size - 1, titleFont.Style);
+                    // Try splitting again
+                    lines = SplitTextIntoLines(title, titleFont, availableWidthForTitle, graphics);
+                }
 
                 // Draw the title
-                graphics.DrawString(title, titleFont, Brushes.Black, new PointF(titleX, titleY));
+                float titleY = (height - titleFont.GetHeight(graphics) * lines.Length) / 2;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    graphics.DrawString(lines[i], titleFont, Brushes.Black, new PointF(20 + logoSize.Width + 30, titleY + i * titleFont.GetHeight(graphics)));
+                }
             }
 
             return bitmap;
+        }
+
+        static string[] SplitTextIntoLines(string text, Font font, float maxWidth, Graphics graphics)
+        {
+            string[] words = text.Split(' ');
+            List<string> lines = new List<string>();
+            string currentLine = "";
+
+            foreach (string word in words)
+            {
+                if (graphics.MeasureString(currentLine + word, font).Width > maxWidth)
+                {
+                    lines.Add(currentLine);
+                    currentLine = "";
+                }
+                currentLine += word + " ";
+            }
+
+            if (!string.IsNullOrEmpty(currentLine))
+                lines.Add(currentLine);
+
+            return lines.ToArray();
         }
 
         // Method to resize the image while maintaining aspect ratio

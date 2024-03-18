@@ -1,10 +1,6 @@
-﻿using DeepAIImageGeneration;
-using Reddit_scraper;
-using Reddit_scraper.AI.RandomStuff;
+﻿using Reddit_scraper;
 using Reddit_scraper.ImageService;
 using Reddit_scraper.VideoMixer;
-using System.Drawing;
-using System.Drawing.Imaging;
 using TextToSpeechApp;
 
 using HttpClient client = new();
