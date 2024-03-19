@@ -2,7 +2,9 @@
 using System.IO;
 using System.Threading.Tasks;
 using Google.Cloud.Speech.V1;
+using Google.Cloud.Storage.V1;
 using Google.Cloud.TextToSpeech.V1;
+using Reddit_scraper.Generic;
 
 namespace TextToSpeechApp
 {
@@ -52,11 +54,25 @@ namespace TextToSpeechApp
             Console.WriteLine($"Audio saved to: {outputFile}");
         }
 
-        public static async Task<int> GenerateSrtAndReturnEndTime(string audioFile, string outputSrtFile)
+        public static async Task<int> GenerateSrtAndReturnEndTime(string audioId, string audioFile, string outputSrtFile)
         {
             // Initialize the SpeechClient with Google Cloud credentials
             SpeechClientBuilder builder = new() { CredentialsPath = _credentialPath };
             SpeechClient speechClient = await builder.BuildAsync();
+
+            // Create a StorageClient to work with Google Cloud Storage
+            StorageClientBuilder storageClientBuilder = new() { CredentialsPath = _credentialPath };
+            StorageClient storageClient = await storageClientBuilder.BuildAsync();
+
+            // Upload the audio file to Google Cloud Storage
+            string bucketName = "web_stories";
+            using (FileStream fileStream = File.OpenRead(audioFile))
+            {
+                await storageClient.UploadObjectAsync(bucketName, audioId, null, fileStream);
+            }
+
+            // Construct the GCS URI for the audio file
+            string gcsUri = $"gs://{bucketName}/{audioId}";
 
             // Perform speech-to-text transcription asynchronously
             var operation = await speechClient.LongRunningRecognizeAsync(new RecognitionConfig
@@ -64,7 +80,7 @@ namespace TextToSpeechApp
                 Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
                 LanguageCode = "en-US",
                 EnableWordTimeOffsets = true
-            }, RecognitionAudio.FromFile(audioFile));
+            }, RecognitionAudio.FromStorageUri(gcsUri));
 
             // Wait for the transcription operation to complete
             operation = await operation.PollUntilCompletedAsync();

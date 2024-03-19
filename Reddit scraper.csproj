@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Google.Cloud.AIPlatform.V1" Version="2.24.0" />
     <PackageReference Include="Google.Cloud.Speech.V1" Version="3.6.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.9.0" />
     <PackageReference Include="Google.Cloud.TextToSpeech.V1" Version="3.4.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.59" />
     <PackageReference Include="RedditSharp" Version="2.0.0" />

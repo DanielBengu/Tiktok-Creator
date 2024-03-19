@@ -1,5 +1,6 @@
 ﻿using DeepAIImageGeneration;
 using HtmlAgilityPack;
+using Reddit_scraper.Generic;
 using Reddit_scraper.Reddit;
 using System;
 using System.Drawing;
@@ -83,8 +84,24 @@ namespace Reddit_scraper
                 //Removed the possible null reference since we already check
 #pragma warning disable CS8602
                 // Get the post content
-                HtmlNode contentNode = postNode.SelectSingleNode($".//div[@slot='text-body']//div[@id='t3_{postId}-post-rtjson-content']//p");
-                string postContent = contentNode != null ? HtmlEntity.DeEntitize(contentNode.InnerText.Trim()) : "";
+                HtmlNode contentContainer = postNode.SelectSingleNode($".//div[@slot='text-body']//div[@id='t3_{postId}-post-rtjson-content']");
+                string postContent = "";
+
+                if (contentContainer != null)
+                {
+                    // Select all paragraph nodes within the content container
+                    HtmlNodeCollection paragraphNodes = contentContainer.SelectNodes(".//p");
+
+                    if (paragraphNodes != null)
+                    {
+                        foreach (HtmlNode paragraphNode in paragraphNodes)
+                        {
+                            // Append inner text of each paragraph, trimmed and decoded
+                            postContent += HtmlEntity.DeEntitize(paragraphNode.InnerText.Trim()) + "\n\n";
+                        }
+                    }
+                }
+
 #pragma warning restore CS8602
 
                 if (string.IsNullOrEmpty(postType) || string.IsNullOrEmpty(decodedPostTitle))
@@ -92,6 +109,10 @@ namespace Reddit_scraper
 
                 // If it's an image post, get the image link
                 string? imageUrl = postType == "image" || postType == "multi_media" ? postNode?.Attributes["content-href"]?.Value : "";
+
+                //Grammar corrector
+                decodedPostTitle = Grammar.CorrectGrammar(decodedPostTitle);
+                postContent = Grammar.CorrectGrammar(postContent);
 
                 return new RedditPost
                 {

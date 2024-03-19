@@ -7,6 +7,7 @@ namespace Reddit_scraper.ImageService
     public class ScreenshotService
     {
         static readonly string reddit_logo_path = "C:\\Users\\danie\\OneDrive\\Documents\\reddit.png";
+        static readonly string female_avatar_path = "C:\\Users\\danie\\OneDrive\\Documents\\female_avatar.png";
         public static string GenerateScreenshot(string path, string title)
         {
             // Generate the image
@@ -26,9 +27,10 @@ namespace Reddit_scraper.ImageService
 
         static Bitmap GenerateImage(string title)
         {
+            string imgUsed = reddit_logo_path;
             // Load the logo image
-            if (string.IsNullOrEmpty(reddit_logo_path) || !File.Exists(reddit_logo_path))
-                throw new FileNotFoundException("Logo file not found", reddit_logo_path);
+            if (string.IsNullOrEmpty(imgUsed) || !File.Exists(imgUsed))
+                throw new FileNotFoundException("Logo file not found", imgUsed);
 
             // Image dimensions
             int imgWidth = 600;
@@ -42,7 +44,7 @@ namespace Reddit_scraper.ImageService
                 graphics.Clear(Color.Transparent);
 
                 DrawBackgroundPanel(graphics, imgWidth, imgHeight);
-                DrawLogo(graphics, imgWidth, imgHeight, out int logoWidth);
+                DrawLogo(graphics, imgWidth, imgHeight, out int logoWidth, imgUsed);
                 DrawTitle(graphics, title, imgWidth, imgHeight, logoWidth);
             }
 
@@ -53,12 +55,10 @@ namespace Reddit_scraper.ImageService
         {
             // Draw a rounded rectangle as background panel
             int cornerRadius = 20;
-            using (GraphicsPath path = RoundedRectangle(new Rectangle(10, 10, width - 20, height - 20), cornerRadius))
-            {
-                // Fill the rounded rectangle with white color
-                using Brush brush = new SolidBrush(Color.White);
-                graphics.FillPath(brush, path);
-            }
+            using GraphicsPath path = RoundedRectangle(new Rectangle(10, 10, width - 20, height - 20), cornerRadius);
+            // Fill the rounded rectangle with white color
+            using Brush brush = new SolidBrush(Color.GhostWhite);
+            graphics.FillPath(brush, path);
         }
         static void DrawTitle(Graphics graphics, string title, int imgWidth, int imgHeight, int logoWidth)
         {
@@ -89,10 +89,10 @@ namespace Reddit_scraper.ImageService
             }
         }
 
-        static void DrawLogo(Graphics graphics, int imgWidth, int imgHeight, out int logoWidth)
+        static void DrawLogo(Graphics graphics, int imgWidth, int imgHeight, out int logoWidth, string imgUsed)
         {
             // Load and resize the logo image
-            Image logoImage = Image.FromFile(reddit_logo_path);
+            Image logoImage = Image.FromFile(imgUsed);
             int logoMaxWidth = imgWidth / 3; // Adjust as needed
             int logoMaxHeight = imgHeight - 40; // Adjust as needed
             Size logoSize = GetResizedImageSize(logoImage, logoMaxWidth, logoMaxHeight);

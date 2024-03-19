@@ -37,7 +37,7 @@ namespace Reddit_scraper.VideoMixer
             string escapedSubtitleFile = subtitleFile.Replace(@"\", @"\\").Replace(@":", @"\:");
 
             //alignment 10 for center, 2 for bottom center
-            string subtitlesStyle = "'Fontsize=30,Alignment=2,Fontname=Helvetica,BackColour=&H000000,Spacing=0.2,Outline=1,Shadow=0.75'";
+            string subtitlesStyle = "'Fontsize=30,Alignment=10,Fontname=Helvetica,BackColour=&H000000,Spacing=0.2,Outline=1,Shadow=0.75'";
 
             // Input files
             string videoInput = $"-i \"{videoFile}\""; // Input video file
