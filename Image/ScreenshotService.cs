@@ -7,11 +7,10 @@ namespace Reddit_scraper.ImageService
     public class ScreenshotService
     {
         static readonly string reddit_logo_path = "C:\\Users\\danie\\OneDrive\\Documents\\reddit.png";
-        static readonly string female_avatar_path = "C:\\Users\\danie\\OneDrive\\Documents\\female_avatar.png";
-        public static string GenerateScreenshot(string path, string title)
+        public static string GenerateScreenshot(string path, string title, int videoWidth)
         {
             // Generate the image
-            Bitmap image = GenerateImage(title);
+            Bitmap image = GenerateImage(title, videoWidth);
 
             string imagePath = Path.Combine(path, "generated_image.png");
 
@@ -25,7 +24,7 @@ namespace Reddit_scraper.ImageService
             return imagePath;
         }
 
-        static Bitmap GenerateImage(string title)
+        static Bitmap GenerateImage(string title, int videoWidth)
         {
             string imgUsed = reddit_logo_path;
             // Load the logo image
@@ -33,8 +32,8 @@ namespace Reddit_scraper.ImageService
                 throw new FileNotFoundException("Logo file not found", imgUsed);
 
             // Image dimensions
-            int imgWidth = 600;
-            int imgHeight = 200;
+            int imgWidth = videoWidth - 10;
+            int imgHeight = videoWidth / 3;
 
             // Create a bitmap with transparent background
             Bitmap bitmap = new(imgWidth, imgHeight, PixelFormat.Format32bppArgb);

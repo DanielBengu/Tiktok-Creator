@@ -9,6 +9,42 @@ namespace Reddit_scraper.Generic
 {
     internal class Grammar
     {
+        private static readonly Dictionary<string, string> _censorDictionary = new()
+        {
+            { "aita", "sono infame" }
+        };
+
+        public static string RemoveEdits(string content)
+        {
+            return Regex.Replace(content, @"(?i)EDIT:.*$", "");
+        }
+
+        public static string ReplaceAgeGender(string input)
+        {
+            // Define the regular expression pattern
+            string pattern = @"\b(\d+)([MF])\b";
+
+            // Define the replacement string format
+            string replacementFormat = "$1";
+            string replacementText = "uomo di {0} anni";
+
+            // Perform the replacement
+            string replacedText = Regex.Replace(input, pattern, match =>
+            {
+                int age = int.Parse(match.Groups[1].Value);
+                string gender = match.Groups[2].Value;
+
+                if (gender.Equals("F", StringComparison.OrdinalIgnoreCase))
+                {
+                    replacementText = "donna di {0} anni";
+                }
+
+                return string.Format(replacementText, age);
+            });
+
+            return replacedText;
+        }
+
         public static string CorrectGrammar(string content)
         {
             // Remove extra whitespaces
@@ -22,8 +58,10 @@ namespace Reddit_scraper.Generic
             content = Regex.Replace(content, @"\s+;", ";");
             content = Regex.Replace(content, @"\s+:", ":");
 
+            content = ReplaceAgeGender(content);
+
             // Split content into sentences
-            string[] sentences = content.Split(new char[] { '.' });
+            string[] sentences = content.Split(['.']);
 
             // Correct capitalization for each sentence
             for (int i = 0; i < sentences.Length; i++)
@@ -31,7 +69,7 @@ namespace Reddit_scraper.Generic
                 if (!string.IsNullOrWhiteSpace(sentences[i]))
                 {
                     // Trim whitespace and capitalize first letter
-                    sentences[i] = char.ToUpper(sentences[i][0]) + sentences[i].Substring(1).ToLower();
+                    sentences[i] = char.ToUpper(sentences[i][0]) + sentences[i][1..].ToLower();
                     // Fix standalone I
                     sentences[i] = Regex.Replace(sentences[i], @"\bi\b", "I");
                 }
@@ -41,6 +79,20 @@ namespace Reddit_scraper.Generic
             content = string.Join(". ", sentences);
 
             return content.Trim();
+        }
+
+        public static string CensorContent(string content)
+        {
+            string censoredContent = content;
+
+            foreach (var pair in _censorDictionary)
+            {
+                string originalWord = pair.Key;
+                string censoredWord = pair.Value;
+                censoredContent = Regex.Replace(censoredContent, @"\b" + originalWord + @"\b", censoredWord, RegexOptions.IgnoreCase);
+            }
+
+            return censoredContent;
         }
     }
 }

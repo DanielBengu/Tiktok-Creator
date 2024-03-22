@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Google.Cloud.Speech.V1;
 using Google.Cloud.Storage.V1;
 using Google.Cloud.TextToSpeech.V1;
+using Google.Cloud.Translation.V2;
 using Reddit_scraper.Generic;
 
 namespace TextToSpeechApp
@@ -54,6 +55,35 @@ namespace TextToSpeechApp
             Console.WriteLine($"Audio saved to: {outputFile}");
         }
 
+        public static async Task<string> TranslateText(string text, string targetLanguageCode)
+        {
+            // Initialize the TranslationClientBuilder
+            TranslationClientBuilder builder = new()
+            {
+                CredentialsPath = _credentialPath
+            };
+
+            // Build the TranslationClient
+            TranslationClient translationClient = await builder.BuildAsync();
+
+            // Perform the translation
+            try
+            {
+                // Perform the translation
+                TranslationResult result = await translationClient.TranslateTextAsync(
+                    text, targetLanguageCode);
+
+                // Return the translated text
+                return result.TranslatedText;
+            }
+            catch (Google.GoogleApiException ex)
+            {
+                // Handle the Google API exception
+                Console.WriteLine($"Google API Exception: {ex.Message}");
+                throw; // Rethrow the exception for handling at the caller level
+            }
+        }
+
         public static async Task<int> GenerateSrtAndReturnEndTime(string audioId, string audioFile, string outputSrtFile)
         {
             // Initialize the SpeechClient with Google Cloud credentials
@@ -78,7 +108,7 @@ namespace TextToSpeechApp
             var operation = await speechClient.LongRunningRecognizeAsync(new RecognitionConfig
             {
                 Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
-                LanguageCode = "en-US",
+                LanguageCode = "it-IT",
                 EnableWordTimeOffsets = true
             }, RecognitionAudio.FromStorageUri(gcsUri));
 

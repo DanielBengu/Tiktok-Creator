@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TextToSpeechApp;
 
 namespace Reddit_scraper
 {
@@ -40,6 +41,8 @@ namespace Reddit_scraper
 
             if (redditPost != null)
             {
+                redditPost.Title = await GoogleAPI.TranslateText(redditPost.Title, "it-IT");
+                redditPost.Content = await GoogleAPI.TranslateText(redditPost.Content, "it-IT");
                 RedditPostWriter.AppendToJsonFile(redditPost);
             }
             else
@@ -110,9 +113,14 @@ namespace Reddit_scraper
                 // If it's an image post, get the image link
                 string? imageUrl = postType == "image" || postType == "multi_media" ? postNode?.Attributes["content-href"]?.Value : "";
 
+                postContent = Grammar.RemoveEdits(postContent);
+
                 //Grammar corrector
                 decodedPostTitle = Grammar.CorrectGrammar(decodedPostTitle);
                 postContent = Grammar.CorrectGrammar(postContent);
+
+                decodedPostTitle = Grammar.CensorContent(decodedPostTitle);
+                postContent = Grammar.CensorContent(postContent);
 
                 return new RedditPost
                 {
@@ -142,19 +150,6 @@ namespace Reddit_scraper
             return segments[^2].TrimEnd('/');
         }
 
-
-        private void PrintPostInfo(RedditPost redditPost)
-        {
-            Console.WriteLine($"Post Type: {redditPost.Type}");
-            Console.WriteLine($"Post Title: {redditPost.Title}");
-            Console.WriteLine($"Post Content: {redditPost.Content}");
-
-            if (!string.IsNullOrEmpty(redditPost.ImageUrl))
-            {
-                Console.WriteLine($"Image URL: {redditPost.ImageUrl}");
-            }
-        }
-
         [GeneratedRegex(@"<shreddit-post.*?</shreddit-post>", RegexOptions.Singleline)]
         private static partial Regex MyRegex();
     }
@@ -166,5 +161,6 @@ namespace Reddit_scraper
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
+        public bool AlreadyProcessed { get; set; } = false;
     }
 }

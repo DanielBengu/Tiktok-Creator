@@ -10,22 +10,37 @@ client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Wi
 
 RedditScraper redditScraper = new(client, new());
 bool keepLoop = true;
+var skipGetCommand = false;
+Tuple<Command, object> data = new(Command.Invalid, string.Empty);
 while (keepLoop)
 {
-    var data = await GetCommand(redditScraper);
+    if(!skipGetCommand)
+        data = await GetCommand(redditScraper);
 
     switch (data.Item1)
     {
         case Command.Invalid:
         case Command.NotSupported:
         default:
+            skipGetCommand = false;
             break;
         case Command.Exit:
             keepLoop = false;
             break;
+        case Command.AlreadyProcessed:
+            Console.WriteLine("Post already processed, do it anyway? y/n");
+            var key = Console.ReadKey();
+            Console.WriteLine();
+            if(key.Key == ConsoleKey.Y)
+            {
+                skipGetCommand = true;
+                data = new(Command.RedditPost, data.Item2);
+            }
+            break;
         case Command.RedditPost:
             RedditPost post = (RedditPost)data.Item2;
             await Reddit.GenerateRedditPost(post);
+            skipGetCommand = false;
             break;
     }
 }
@@ -51,15 +66,18 @@ static async Task<Tuple<Command, object>> GetCommand(RedditScraper redditScraper
     // Call the ScrapeRedditPost method
     var post = await redditScraper.ScrapeRedditPost(url); // Wait for the asynchronous method to complete
 
-    if (post != null)
-        return new (Command.RedditPost, post);
-       
+    if(post == null)
+       return new(Command.NotSupported, string.Empty);
 
-    return new(Command.NotSupported, string.Empty);
+    if (post.AlreadyProcessed == false)
+        return new (Command.RedditPost, post);
+    else
+        return new(Command.AlreadyProcessed, post);
 }
 
 enum Command
 {
+    AlreadyProcessed,
     Invalid,
     Exit,
     NotSupported,

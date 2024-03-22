@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using HtmlAgilityPack;
 using Newtonsoft.Json;
 
 namespace Reddit_scraper.Reddit
 {
     internal class RedditPostWriter
     {
-        public static void AppendToJsonFile(RedditPost post)
+        public static bool AppendToJsonFile(RedditPost post)
         {
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string filePath = Path.Combine(documentsPath, "reddit_posts.json");
@@ -23,7 +24,8 @@ namespace Reddit_scraper.Reddit
             if (existingData != null && existingData.Posts.Exists(p => p.Id == post.Id))
             {
                 Console.WriteLine($"Post with ID '{post.Id}' already exists. Skipping appending.");
-                return;
+                post.AlreadyProcessed = true;
+                return false;
             }
 
             existingData.Posts.Add(post);
@@ -32,6 +34,8 @@ namespace Reddit_scraper.Reddit
             File.WriteAllText(filePath, json);
 
             Console.WriteLine($"Post data appended to: {filePath}");
+
+            return true;
         }
     }
 }
