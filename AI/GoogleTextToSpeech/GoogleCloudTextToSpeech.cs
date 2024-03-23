@@ -1,11 +1,16 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Google.Cloud.Speech.V1;
 using Google.Cloud.Storage.V1;
 using Google.Cloud.TextToSpeech.V1;
 using Google.Cloud.Translation.V2;
+using Google.Protobuf.Collections;
+using Google.Protobuf.WellKnownTypes;
 using Reddit_scraper.Generic;
+using Duration = Google.Protobuf.WellKnownTypes.Duration;
 
 namespace TextToSpeechApp
 {
@@ -86,6 +91,8 @@ namespace TextToSpeechApp
 
         public static async Task<int> GenerateSrtAndReturnEndTime(string audioId, string audioFile, string outputSrtFile)
         {
+            Console.WriteLine("Generating subtitles...");
+
             // Initialize the SpeechClient with Google Cloud credentials
             SpeechClientBuilder builder = new() { CredentialsPath = _credentialPath };
             SpeechClient speechClient = await builder.BuildAsync();
@@ -117,7 +124,8 @@ namespace TextToSpeechApp
 
             double timeSubsEnd = 0;
             List<string> subtitles = [];
-
+            string content = string.Empty;
+            DivideTextIntoLines(operation.Result.Results[0].Alternatives[0].Words);
             foreach (var result in operation.Result.Results)
                 foreach (var alternative in result.Alternatives)
                     foreach (var wordInfo in alternative.Words)
@@ -131,7 +139,40 @@ namespace TextToSpeechApp
 
             // Write subtitles to .srt file
             File.WriteAllLines(outputSrtFile, subtitles);
+            Console.WriteLine("Subtitles generated");
             return (int)Math.Ceiling(timeSubsEnd);
+        }
+
+        static List<string> DivideTextIntoLines(RepeatedField<WordInfo> content)
+        {
+            List<string> subtitles = []; // Initialize the list using new List<string>()
+            int maxWordLimit = 6;
+            TimeSpan startTime = TimeSpan.Zero;
+            TimeSpan endTime = TimeSpan.Zero;
+            StringBuilder subtitleTextBuilder = new(); // Use StringBuilder for efficient string concatenation
+
+            foreach (var word in content)
+            {
+                subtitleTextBuilder.Append($"{word} "); // Use Append method of StringBuilder to concatenate strings
+
+                // Check if the length of the concatenated string exceeds the limit
+                if (subtitleTextBuilder.Length > maxWordLimit)
+                {
+                    endTime = word.EndTime.ToTimeSpan();
+                    subtitles.Add($"{subtitles.Count + 1}\n{startTime} --> {endTime}\n{subtitleTextBuilder}\n");
+                    startTime = endTime.Add(TimeSpan.FromMilliseconds(1)); // Use endTime to calculate the new startTime
+                    subtitleTextBuilder.Clear();
+                }
+            }
+
+            // Add the remaining words as a final subtitle if they didn't meet the word limit
+            if (subtitleTextBuilder.Length > 0)
+            {
+                endTime = content.Last().EndTime.ToTimeSpan(); // Use the end time of the last word
+                subtitles.Add($"{subtitles.Count + 1}\n{startTime} --> {endTime}\n{subtitleTextBuilder}\n");
+            }
+
+            return subtitles;
         }
 
         // Method to convert Duration to SRT time format

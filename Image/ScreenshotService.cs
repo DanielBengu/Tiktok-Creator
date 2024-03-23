@@ -7,6 +7,7 @@ namespace Reddit_scraper.ImageService
     public class ScreenshotService
     {
         static readonly string reddit_logo_path = "C:\\Users\\danie\\OneDrive\\Documents\\reddit.png";
+        static readonly string metadata_path = "C:\\Users\\danie\\OneDrive\\Documents\\likescomments.png";
         public static string GenerateScreenshot(string path, string title, int videoWidth)
         {
             // Generate the image
@@ -45,6 +46,21 @@ namespace Reddit_scraper.ImageService
                 DrawBackgroundPanel(graphics, imgWidth, imgHeight);
                 DrawLogo(graphics, imgWidth, imgHeight, out int logoWidth, imgUsed);
                 DrawTitle(graphics, title, imgWidth, imgHeight, logoWidth);
+
+                // Add image representing likes and comments
+                string likesCommentsImage = metadata_path; // Path to your likes and comments image
+                if (File.Exists(likesCommentsImage))
+                {
+                    Image likesComments = Image.FromFile(likesCommentsImage);
+                    // Determine position and size of the likes and comments image
+                    int likesCommentsWidth = imgWidth / 2 - imgWidth / 8; // Adjust as needed
+                    int likesCommentsHeight = (imgHeight / 4) - (imgHeight / 12); // Adjust as needed
+                    int likesCommentsX = ((imgWidth - likesCommentsWidth) / 2) + (imgWidth / 4);
+                    int likesCommentsY = imgHeight - likesCommentsHeight - 20; // Adjust as needed
+                                                                               // Draw the likes and comments image
+                    graphics.DrawImage(likesComments, likesCommentsX, likesCommentsY, likesCommentsWidth, likesCommentsHeight);
+                    likesComments.Dispose();
+                }
             }
 
             return bitmap;
@@ -52,11 +68,12 @@ namespace Reddit_scraper.ImageService
 
         static void DrawBackgroundPanel(Graphics graphics, int width, int height)
         {
-            // Draw a rounded rectangle as background panel
             int cornerRadius = 20;
             using GraphicsPath path = RoundedRectangle(new Rectangle(10, 10, width - 20, height - 20), cornerRadius);
-            // Fill the rounded rectangle with white color
-            using Brush brush = new SolidBrush(Color.GhostWhite);
+
+            Color color = Color.FromArgb(11, 20, 22);
+
+            using Brush brush = new SolidBrush(color);
             graphics.FillPath(brush, path);
         }
         static void DrawTitle(Graphics graphics, string title, int imgWidth, int imgHeight, int logoWidth)
@@ -71,7 +88,7 @@ namespace Reddit_scraper.ImageService
             string[] lines = SplitTextIntoLines(title, titleFont, availableWidthForTitle, graphics);
 
             // Check if the text fits within 3 lines, otherwise reduce font size and try again
-            int maxLines = 5;
+            int maxLines = 2;
             while (lines.Length > maxLines && titleFont.Size > 5)
             {
                 // Reduce font size
@@ -84,7 +101,7 @@ namespace Reddit_scraper.ImageService
             float titleY = (imgHeight - titleFont.GetHeight(graphics) * lines.Length) / 2;
             for (int i = 0; i < lines.Length; i++)
             {
-                graphics.DrawString(lines[i], titleFont, Brushes.Black, new PointF(20 + logoWidth + 30, titleY + i * titleFont.GetHeight(graphics)));
+                graphics.DrawString(lines[i], titleFont, Brushes.White, new PointF(20 + logoWidth + 30, titleY + i * titleFont.GetHeight(graphics)));
             }
         }
 
@@ -92,8 +109,8 @@ namespace Reddit_scraper.ImageService
         {
             // Load and resize the logo image
             Image logoImage = Image.FromFile(imgUsed);
-            int logoMaxWidth = imgWidth / 3; // Adjust as needed
-            int logoMaxHeight = imgHeight - 40; // Adjust as needed
+            int logoMaxWidth = imgWidth / 4; // Adjust as needed
+            int logoMaxHeight = imgHeight - 80; // Adjust as needed
             Size logoSize = GetResizedImageSize(logoImage, logoMaxWidth, logoMaxHeight);
 
             // Load and resize the logo image with transparency preservation
@@ -155,7 +172,7 @@ namespace Reddit_scraper.ImageService
             return resizedImage;
         }
 
-
+        
 
         static GraphicsPath RoundedRectangle(Rectangle rectangle, int cornerRadius)
         {

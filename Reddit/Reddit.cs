@@ -39,16 +39,28 @@ namespace Reddit_scraper.Reddit
             */
 
             //Generate video caption
+            Console.WriteLine($"Title generated: {post.Title}\nDo you accept the title? y/n");
+            ConsoleKeyInfo choice = Console.ReadKey();
+            Console.WriteLine();
+            if (choice.Key == ConsoleKey.N)
+            {
+                Console.WriteLine("Insert new title");
+                string? newTitle = Console.ReadLine();
+                if (!string.IsNullOrEmpty(newTitle))
+                    post.Title = newTitle;
+            }
+
             string captionFile = Path.Combine(basePostPathOutput, "caption.txt");
-            string videoCaption = $"{post.Title} #reddit #redditstories #fyp #perte";
+            string videoCaption = $"{post.Title} #reddit #storie #fyp #perte #redditita";
+
             File.WriteAllText(captionFile, videoCaption);
 
             Console.WriteLine("Select gender: M/F");
             ConsoleKeyInfo gender = Console.ReadKey();
-            Console.ReadLine();
+            Console.WriteLine();
 
             SsmlVoiceGender ssmlVoiceGender = SsmlVoiceGender.Male;
-            string name = "it-IT-Neural2-C";
+            string name = "it-IT-Standard-D";
 
             if (gender.Key == ConsoleKey.F)
             {
@@ -86,6 +98,12 @@ namespace Reddit_scraper.Reddit
 
             //Create screenshot TODO
             string imagePath = ScreenshotService.GenerateScreenshot(basePostPathContent, post.Title, width);
+
+            if (File.Exists(videoPath))
+            {
+                Console.WriteLine("Video already existing, removing it");
+                File.Delete(videoPath);
+            }
 
             VideoMixing.GenerateVideo(baseVideoFile, filePathAudio, imagePath, subtitlePath, subtitleDuration, videoPath, "C:\\Users\\danie\\Downloads\\ffmpeg-2024-03-07-git-97beb63a66-full_build\\bin\\ffmpeg.exe");
 
