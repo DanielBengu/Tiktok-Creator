@@ -123,20 +123,8 @@ namespace TextToSpeechApp
             operation = await operation.PollUntilCompletedAsync();
 
             double timeSubsEnd = 0;
-            List<string> subtitles = [];
-            string content = string.Empty;
-            DivideTextIntoLines(operation.Result.Results[0].Alternatives[0].Words);
-            foreach (var result in operation.Result.Results)
-                foreach (var alternative in result.Alternatives)
-                    foreach (var wordInfo in alternative.Words)
-                    {
-                        string startTime = ToSrtTime(wordInfo.StartTime.ToTimeSpan());
-                        string endTime = ToSrtTime(wordInfo.EndTime.ToTimeSpan());
-                        timeSubsEnd = wordInfo.EndTime.ToTimeSpan().TotalSeconds;
-                        string subtitleText = wordInfo.Word; // Use word instead of alternative.Transcript
-                        subtitles.Add($"{subtitles.Count + 1}\n{startTime} --> {endTime}\n{subtitleText}\n");
-                    }
-
+            List<string> subtitles = DivideTextIntoLines(operation.Result.Results[0].Alternatives[0].Words);
+           
             // Write subtitles to .srt file
             File.WriteAllLines(outputSrtFile, subtitles);
             Console.WriteLine("Subtitles generated");

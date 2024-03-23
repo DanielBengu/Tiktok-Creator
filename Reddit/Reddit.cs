@@ -19,6 +19,9 @@ namespace Reddit_scraper.Reddit
             if (!Directory.Exists(basePostPathContent))
                 Directory.CreateDirectory(basePostPathContent);
 
+            string filePathAudio = Path.Combine(basePostPathContent, $"audio.mp3");
+            string videoPath = Path.Combine(basePostPathOutput, $"video.mp4");
+
             /*
             //Google Gemini AI (Chat)
             try
@@ -54,6 +57,7 @@ namespace Reddit_scraper.Reddit
             string videoCaption = $"{post.Title} #reddit #storie #fyp #perte #redditita";
 
             File.WriteAllText(captionFile, videoCaption);
+            GenericService.CalculateAndSaveBestTimeForPosting(basePostPathOutput);
 
             Console.WriteLine("Select gender: M/F");
             ConsoleKeyInfo gender = Console.ReadKey();
@@ -77,7 +81,6 @@ namespace Reddit_scraper.Reddit
             }
             //Profound Woman: it-IT, en-US-Wavenet-C, Female
             //Text-to-speech
-            string filePathAudio = Path.Combine(basePostPathContent, $"audio.mp3");
             await GoogleAPI.GenerateSpeech($"{post.Title}. {post.Content}", filePathAudio, "it-IT", name, ssmlVoiceGender);
 
             try
@@ -93,8 +96,7 @@ namespace Reddit_scraper.Reddit
             }
 
             //Video
-            string videoPath = Path.Combine(basePostPathOutput, $"video.mp4");
-            string baseVideoFile = BackgroundVideo.GetRandomBackgroundVideoPath(subtitleDuration, @"C:\Users\danie\Videos\Downloader\Background videos\Minecraft", out int width);
+            string baseVideoFile = GenericService.GetRandomBackgroundVideoPath(subtitleDuration, @"C:\Users\danie\Videos\Downloader\Background videos\Minecraft", out int width);
 
             //Create screenshot TODO
             string imagePath = ScreenshotService.GenerateScreenshot(basePostPathContent, post.Title, width);
