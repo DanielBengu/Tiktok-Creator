@@ -42,12 +42,14 @@ while (keepLoop)
             await Reddit.GenerateRedditPost(post);
             skipGetCommand = false;
             break;
+        case Command.Custom:
+            break;
     }
 }
 
 static async Task<Tuple<Command, object>> GetCommand(RedditScraper redditScraper)
 {
-    Console.WriteLine("Enter Reddit post URL to scrape (or type 'exit' to quit):");
+    Console.WriteLine("Enter URL, 'custom' or 'exit'");
     string? url = Console.ReadLine();
 
     if (string.IsNullOrEmpty(url))
@@ -55,6 +57,9 @@ static async Task<Tuple<Command, object>> GetCommand(RedditScraper redditScraper
 
     if (url.Equals("exit", StringComparison.OrdinalIgnoreCase))
         return new(Command.Exit, string.Empty);
+
+    if (url.Equals("custom", StringComparison.OrdinalIgnoreCase))
+        return new(Command.Custom, string.Empty);
 
     // Validate the URL (you may want to add more robust URL validation)
     if (!Uri.TryCreate(url, UriKind.Absolute, out _))
@@ -81,5 +86,6 @@ enum Command
     Invalid,
     Exit,
     NotSupported,
-    RedditPost
+    RedditPost,
+    Custom
 }

@@ -122,45 +122,57 @@ namespace TextToSpeechApp
             // Wait for the transcription operation to complete
             operation = await operation.PollUntilCompletedAsync();
 
-            double timeSubsEnd = 0;
-            List<string> subtitles = DivideTextIntoLines(operation.Result.Results[0].Alternatives[0].Words);
-           
+            List<string> subtitles = [];
+            TimeSpan endTime = TimeSpan.Zero; // Initialize the end time
+
+            // Process the transcription results and generate subtitles
+            for (int i = 0; i < operation.Result.Results.Count; i++)
+            {
+                // Pass the subtitles list and update the end time
+                endTime = DivideTextIntoLines(operation.Result.Results[i].Alternatives[0].Words, subtitles);
+            }
+
             // Write subtitles to .srt file
             File.WriteAllLines(outputSrtFile, subtitles);
             Console.WriteLine("Subtitles generated");
-            return (int)Math.Ceiling(timeSubsEnd);
+
+            return (int)Math.Ceiling(endTime.TotalSeconds);
         }
 
-        static List<string> DivideTextIntoLines(RepeatedField<WordInfo> content)
+        static TimeSpan DivideTextIntoLines(RepeatedField<WordInfo> content, List<string> subtitles)
         {
-            List<string> subtitles = []; // Initialize the list using new List<string>()
             int maxWordLimit = 6;
-            TimeSpan startTime = TimeSpan.Zero;
-            TimeSpan endTime = TimeSpan.Zero;
             StringBuilder subtitleTextBuilder = new(); // Use StringBuilder for efficient string concatenation
+            TimeSpan endTime = TimeSpan.Zero;
 
             foreach (var word in content)
             {
-                subtitleTextBuilder.Append($"{word} "); // Use Append method of StringBuilder to concatenate strings
+                subtitleTextBuilder.Append($"{word.Word} "); // Use Append method of StringBuilder to concatenate strings
 
                 // Check if the length of the concatenated string exceeds the limit
                 if (subtitleTextBuilder.Length > maxWordLimit)
                 {
-                    endTime = word.EndTime.ToTimeSpan();
-                    subtitles.Add($"{subtitles.Count + 1}\n{startTime} --> {endTime}\n{subtitleTextBuilder}\n");
-                    startTime = endTime.Add(TimeSpan.FromMilliseconds(1)); // Use endTime to calculate the new startTime
+                    // Add the subtitle to the list
+                    subtitles.Add($"{subtitles.Count + 1}\n{ToSrtTime(word.StartTime.ToTimeSpan())} --> {ToSrtTime(word.EndTime.ToTimeSpan())}\n{subtitleTextBuilder.ToString().Trim()}\n");
                     subtitleTextBuilder.Clear();
+                    endTime = word.EndTime.ToTimeSpan(); // Update the end time
                 }
             }
 
             // Add the remaining words as a final subtitle if they didn't meet the word limit
             if (subtitleTextBuilder.Length > 0)
             {
-                endTime = content.Last().EndTime.ToTimeSpan(); // Use the end time of the last word
-                subtitles.Add($"{subtitles.Count + 1}\n{startTime} --> {endTime}\n{subtitleTextBuilder}\n");
+                // You can use the last word's end time as the end time for the remaining words
+                var lastWord = content.LastOrDefault();
+                if (lastWord != null)
+                {
+                    // Add the last subtitle to the list
+                    subtitles.Add($"{subtitles.Count + 1}\n{ToSrtTime(lastWord.StartTime.ToTimeSpan())} --> {ToSrtTime(lastWord.EndTime.ToTimeSpan())}\n{subtitleTextBuilder.ToString().Trim()}\n");
+                    endTime = lastWord.EndTime.ToTimeSpan(); // Update the end time
+                }
             }
 
-            return subtitles;
+            return endTime; // Return the calculated end time
         }
 
         // Method to convert Duration to SRT time format
