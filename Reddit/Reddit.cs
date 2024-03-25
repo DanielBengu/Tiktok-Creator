@@ -1,4 +1,5 @@
 ﻿using Google.Cloud.TextToSpeech.V1;
+using Reddit_scraper.AI.RandomStuff;
 using Reddit_scraper.Generic;
 using Reddit_scraper.ImageService;
 using Reddit_scraper.VideoMixer;
@@ -22,25 +23,6 @@ namespace Reddit_scraper.Reddit
             string filePathAudio = Path.Combine(basePostPathContent, $"audio.mp3");
             string videoPath = Path.Combine(basePostPathOutput, $"video.mp4");
 
-            /*
-            //Google Gemini AI (Chat)
-            try
-            {
-                string response = await GeminiQuickstart.GenerateContent("prompt");
-                Console.WriteLine(response);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
-            */
-            //AI Image Generator 
-            /*
-            EdenAIImageGenerator edenAIImageGenerator = new();
-            Image? ai_image = await edenAIImageGenerator.GenerateImageAsync(post.Title);
-            EdenAIImageGenerator.SaveImage(ai_image, post);
-            */
-
             //Generate video caption
             Console.WriteLine($"Title generated: {post.Title}\nDo you accept the title? y/n");
             ConsoleKeyInfo choice = Console.ReadKey();
@@ -58,6 +40,20 @@ namespace Reddit_scraper.Reddit
 
             File.WriteAllText(captionFile, videoCaption);
             GenericService.CalculateAndSaveBestTimeForPosting(basePostPathOutput);
+
+            //Google Gemini AI (Chat)
+            try
+            {
+                bool enabled = false;
+                string prompt = $"rewrite this story, make it short and remove unnecessary parts: {post.Content}";
+                string response = await GeminiQuickstart.GenerateContent(prompt, enabled);
+                if(!string.IsNullOrEmpty(response))
+                    Console.WriteLine(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
 
             Console.WriteLine("Select gender: M/F");
             ConsoleKeyInfo gender = Console.ReadKey();

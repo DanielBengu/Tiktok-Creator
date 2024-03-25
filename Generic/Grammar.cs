@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Reddit_scraper.Generic
 {
@@ -11,7 +12,10 @@ namespace Reddit_scraper.Generic
     {
         private static readonly Dictionary<string, string> _censorDictionary = new()
         {
-            { "aita", "sono infame" }
+            { "aita", "sono infame" },
+            { "sex", "andare a letto" },
+            { "dollar", "euro" },
+            { "dollars", "euro" }
         };
 
         public static string RemoveEdits(string content)
@@ -24,22 +28,33 @@ namespace Reddit_scraper.Generic
             // Define the regular expression pattern
             string pattern = @"\b(\d+)([MF])\b";
 
-            // Define the replacement string format
-            string replacementFormat = "$1";
-            string replacementText = "uomo di {0} anni";
-
             // Perform the replacement
             string replacedText = Regex.Replace(input, pattern, match =>
             {
                 int age = int.Parse(match.Groups[1].Value);
                 string gender = match.Groups[2].Value;
 
-                if (gender.Equals("F", StringComparison.OrdinalIgnoreCase))
-                {
-                    replacementText = "donna di {0} anni";
-                }
+                // Define the replacement string format based on gender
+                string replacementText = gender.Equals("F", StringComparison.OrdinalIgnoreCase) ? "donna di {0} anni" : "uomo di {0} anni";
 
                 return string.Format(replacementText, age);
+            });
+
+            return replacedText;
+        }
+
+        public static string ReplaceDollarsToEuros(string input)
+        {
+            // Define the regular expression pattern to match sums in dollars
+            string pattern = @"\$(\d+(?:\.\d{2})?)";
+
+            // Perform the replacement
+            string replacedText = Regex.Replace(input, pattern, match =>
+            {
+                decimal dollars = decimal.Parse(match.Groups[1].Value);
+
+                // Format the replacement string with euros
+                return $"{Math.Floor(dollars)} euro";
             });
 
             return replacedText;
@@ -59,6 +74,7 @@ namespace Reddit_scraper.Generic
             content = Regex.Replace(content, @"\s+:", ":");
 
             content = ReplaceAgeGender(content);
+            content = ReplaceDollarsToEuros(content);
 
             // Split content into sentences
             string[] sentences = content.Split(['.']);

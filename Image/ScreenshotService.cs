@@ -79,7 +79,7 @@ namespace Reddit_scraper.ImageService
         static void DrawTitle(Graphics graphics, string title, int imgWidth, int imgHeight, int logoWidth)
         {
             // Draw title
-            Font titleFont = new("Arial", 24, FontStyle.Bold);
+            Font titleFont = new("Arial", 30, FontStyle.Bold);
 
             // Calculate the available width for the title
             float availableWidthForTitle = imgWidth - 60 - logoWidth; // Adjusted padding

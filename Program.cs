@@ -43,6 +43,19 @@ while (keepLoop)
             skipGetCommand = false;
             break;
         case Command.Custom:
+            Console.WriteLine("Write the title:");
+            string title = Console.ReadLine() ?? string.Empty;
+            Console.WriteLine("Write the content:");
+            string content = Console.ReadLine() ?? string.Empty;
+            RedditPost customPost = new()
+            {
+                AlreadyProcessed = false,
+                Content = content,
+                Title = title,
+                Id = Guid.NewGuid().ToString(),
+                Type = "text",
+            };
+            await Reddit.GenerateRedditPost(customPost);
             break;
     }
 }

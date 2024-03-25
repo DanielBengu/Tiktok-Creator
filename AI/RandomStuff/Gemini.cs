@@ -1,5 +1,6 @@
 ﻿using Google.Api.Gax.Grpc;
 using Google.Cloud.AIPlatform.V1;
+using Google.Cloud.Translation.V2;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,12 +12,15 @@ namespace Reddit_scraper.AI.RandomStuff
         static readonly string _credentialPath = "C:\\Users\\danie\\Downloads\\august-period-416720-ed316595a52b.json";
         public static async Task<string> GenerateContent(
             string prompt,
+            bool enabled,
             string projectId = "august-period-416720",
             string location = "us-central1",
             string publisher = "google",
-            string model = "gemini-1.0-pro-vision"
+            string model = "gemini-1.0-pro"
         )
         {
+            if (!enabled)
+                return string.Empty;
             // Create client
             var predictionServiceClient = new PredictionServiceClientBuilder
             {
@@ -24,26 +28,14 @@ namespace Reddit_scraper.AI.RandomStuff
                 CredentialsPath = _credentialPath
             }.Build();
 
-            //string imageUri = "gs://generativeai-downloads/images/scones.jpg";
-
             // Initialize request argument(s)
             var content = new Content
             {
                 Role = "USER"
             };
-            content.Parts.AddRange(new List<Part>()
+            content.Parts.Add(new Part
             {
-                new() {
-                    Text = prompt
-                }
-                /*
-                new() {
-                    FileData = new() {
-                        MimeType = "image/png",
-                        FileUri = imageUri
-                    }
-                }
-                */
+                Text = prompt,
             });
 
             var generateContentRequest = new GenerateContentRequest
@@ -54,7 +46,7 @@ namespace Reddit_scraper.AI.RandomStuff
                     Temperature = 0.4f,
                     TopP = 1,
                     TopK = 32,
-                    MaxOutputTokens = 2048
+                    MaxOutputTokens = 1024
                 }
             };
             generateContentRequest.Contents.Add(content);

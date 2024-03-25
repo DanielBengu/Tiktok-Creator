@@ -1,16 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Text;
 using Google.Cloud.Speech.V1;
 using Google.Cloud.Storage.V1;
 using Google.Cloud.TextToSpeech.V1;
 using Google.Cloud.Translation.V2;
 using Google.Protobuf.Collections;
-using Google.Protobuf.WellKnownTypes;
-using Reddit_scraper.Generic;
-using Duration = Google.Protobuf.WellKnownTypes.Duration;
 
 namespace TextToSpeechApp
 {
@@ -141,19 +134,22 @@ namespace TextToSpeechApp
 
         static TimeSpan DivideTextIntoLines(RepeatedField<WordInfo> content, List<string> subtitles)
         {
-            int maxWordLimit = 6;
+            int maxWordLimit = 8;
             StringBuilder subtitleTextBuilder = new(); // Use StringBuilder for efficient string concatenation
             TimeSpan endTime = TimeSpan.Zero;
-
+            TimeSpan startTime = TimeSpan.Zero;
             foreach (var word in content)
             {
-                subtitleTextBuilder.Append($"{word.Word} "); // Use Append method of StringBuilder to concatenate strings
+                if (string.IsNullOrEmpty(subtitleTextBuilder.ToString()))
+                    startTime = word.StartTime.ToTimeSpan();
+
+                subtitleTextBuilder.Append($"{word.Word.ToUpper()} ");
 
                 // Check if the length of the concatenated string exceeds the limit
                 if (subtitleTextBuilder.Length > maxWordLimit)
                 {
                     // Add the subtitle to the list
-                    subtitles.Add($"{subtitles.Count + 1}\n{ToSrtTime(word.StartTime.ToTimeSpan())} --> {ToSrtTime(word.EndTime.ToTimeSpan())}\n{subtitleTextBuilder.ToString().Trim()}\n");
+                    subtitles.Add($"{subtitles.Count + 1}\n{ToSrtTime(startTime)} --> {ToSrtTime(word.EndTime.ToTimeSpan())}\n{subtitleTextBuilder.ToString().Trim()}\n");
                     subtitleTextBuilder.Clear();
                     endTime = word.EndTime.ToTimeSpan(); // Update the end time
                 }
@@ -167,7 +163,7 @@ namespace TextToSpeechApp
                 if (lastWord != null)
                 {
                     // Add the last subtitle to the list
-                    subtitles.Add($"{subtitles.Count + 1}\n{ToSrtTime(lastWord.StartTime.ToTimeSpan())} --> {ToSrtTime(lastWord.EndTime.ToTimeSpan())}\n{subtitleTextBuilder.ToString().Trim()}\n");
+                    subtitles.Add($"{subtitles.Count + 1}\n{ToSrtTime(startTime)} --> {ToSrtTime(lastWord.EndTime.ToTimeSpan())}\n{subtitleTextBuilder.ToString().Trim()}\n");
                     endTime = lastWord.EndTime.ToTimeSpan(); // Update the end time
                 }
             }
